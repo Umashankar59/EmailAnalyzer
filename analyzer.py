@@ -53,15 +53,15 @@ def parse_mbox(extract_folder):
             if domain not in free_domains:
                 company_name = domain.split('.')[0].capitalize()
                 
-        # --- Capture exact time for sorting ---
+        
         raw_date = str(parsed_msg['Date'] or "")
         try:
-            # Converts the messy email date into a strict Python datetime object
+            
             sortable_time = parsedate_to_datetime(raw_date)
-            # Make sure it's "timezone unaware" so Pandas can sort it easily
+           
             sortable_time = sortable_time.replace(tzinfo=None) 
         except Exception:
-            sortable_time = pd.NaT # Not-a-Time (Pandas will put these at the bottom)
+            sortable_time = pd.NaT 
             
         full_body = ""
         try:
@@ -82,7 +82,7 @@ def parse_mbox(extract_folder):
         
         email_data.append({
             "Sortable Time": sortable_time, 
-            "Date & Time": "", # We will format this nicely later
+            "Date & Time": "", 
             "Sender Name": sender_name,
             "Sender Email": sender_email.lower(),
             "Receiver Name": receiver_name,
@@ -107,16 +107,16 @@ def export_to_excel(data, output_excel_path):
     df = pd.DataFrame(data)
     original_count = len(df)
     
-    # 1. Sort everything by time (Newest emails at the top)
+    
     df = df.sort_values(by='Sortable Time', ascending=False)
     
-    # 2. Format the Date beautifully now that it is sorted
+    
     df['Date & Time'] = df['Sortable Time'].dt.strftime("%B %d, %Y at %I:%M %p")
     
-    # 3. Delete the temporary sorting column
+    
     df = df.drop(columns=['Sortable Time'])
     
-    # 4. STRICT NO REPEAT: If this Sender and Receiver pair has already appeared, delete it.
+    
     df = df.drop_duplicates(subset=['Sender Email', 'Receiver Email'], keep='first')
     
     final_count = len(df)
